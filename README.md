@@ -1,8 +1,8 @@
 # EXPERIMENT-02-INTERFACTING-DIGITAL-SENSOR-WITH-EDGE-DEVELOPMENT-BOARD-ULTRASONIC-AND-PIR-SENSOR-(RASPBERRYPI-PI4)
-### NAME 
-### DEPARTMENT 
-### ROLL NO 
-### DATE OF EXPERIMENT 
+### NAME Pavithra P
+### DEPARTMENT  CSE(IoT)
+### ROLL NO  212223110035
+### DATE OF EXPERIMENT 03.08.2026
 
 ### AIM
 To interface a digital sensor (Ultrasonic and PIR) with the Raspberry Pi 4 and control it using Python.
@@ -62,45 +62,130 @@ Connect the PIR sensor OUT to any one GPIO.
 Experiment 2A
 ## PROGRAM (Python)
 ```
-
-
- 
-
-
-
+import RPi.GPIO as GPIO 
+import time 
+import requests
+# ThingSpeak settings 
+API_KEY = "71U2JWP1PFKWYPF8" 
+THINGSPEAK_URL = "https://api.thingspeak.com/update" 
+# GPIO pins 
+TRIG = 23 
+ECHO = 24 
+GPIO.setmode(GPIO.BCM) 
+GPIO.setup(TRIG, GPIO.OUT) 
+GPIO.setup(ECHO, GPIO.IN) 
+def get_distance(): 
+ GPIO.output(TRIG, False) 
+ time.sleep(0.5) 
+ # Trigger pulse 
+ GPIO.output(TRIG, True) 
+ time.sleep(0.00001) 
+ GPIO.output(TRIG, False) 
+ while GPIO.input(ECHO) == 0: 
+  pulse_start = time.time() 
+ while GPIO.input(ECHO) == 1: 
+  pulse_end = time.time() 
+ pulse_duration = pulse_end - pulse_start 
+ distance = pulse_duration * 17150 
+ distance = round(distance, 2) 
+ return distance 
+try: 
+ while True: 
+  distance = get_distance() 
+  # Console output 
+  print("distance =", distance, "cm") 
+  # Text message for ThingSpeak 
+  status_text = f"distance = {distance} cm" 
+  # Send data to ThingSpeak 
+  payload = { 
+  "api_key": API_KEY, 
+  "field1": distance, # numeric for chart 
+  "status": status_text # text message 
+  } 
+  response = requests.get(THINGSPEAK_URL, params=payload) 
+  print("Sent to ThingSpeak")
+ time.sleep(15) 
+except KeyboardInterrupt: 
+ GPIO.cleanup()
  
 ````
 
 ### OUPUT  
 Experiment 2A
 
-# FIGURE -04 ADD TITILE HERE 
+# FIGURE -04 Circuit
+<img width="1536" height="1536" alt="image" src="https://github.com/user-attachments/assets/aa662ce7-3a8e-41b0-9481-dc679836f0e6" />
 
-#  FIGURE -05 ADD TITILE HERE 
+#  FIGURE -05 Console
+<img width="1536" height="1536" alt="image" src="https://github.com/user-attachments/assets/2046dfd4-cdf8-4a97-b87a-25adc7600e45" />
 
-# FIGURE -06 ADD TITLE HERE 
+# FIGURE -06 Cloud
+<img width="1898" height="833" alt="image" src="https://github.com/user-attachments/assets/21a64c16-7a4e-4ef7-9e8b-cbc22a168ae8" />
 
 Experiment 2B
 ## PROGRAM (Python)
 ```
+import RPi.GPIO as GPIO
+import time
+import requests
 
+WRITE_API_KEY = "71U2JWP1PFKWYPF8"
+URL = "https://api.thingspeak.com/update"
 
- 
+PIR_PIN = 18
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(PIR_PIN, GPIO.IN)
 
+print("PIR Monitoring Started...")
+time.sleep(2)
 
- 
+last_state = -1 # store previous state
+
+def update_thingspeak(state):
+ data = {
+ "api_key": WRITE_API_KEY,
+ "field1": state
+ }
+ try:
+  requests.get(URL, params=data)
+  print("Uploaded to ThingSpeak:", state)
+ except:
+  print("Upload Failed")
+while True:
+ motion = GPIO.input(PIR_PIN)
+
+ if motion != last_state: # send only if changed
+  if motion == 1:
+   print("Motion Detected")
+   update_thingspeak(1)
+  else:
+   print("No Motion")
+   update_thingspeak(0)
+
+  last_state = motion
+  time.sleep(15) # ThingSpeak delay
+
+ time.sleep(1)
+
 ````
 
 ### OUPUT  
 Experiment 2B
 
-# FIGURE -07 ADD TITILE HERE 
+# FIGURE -07 Circuit
+<img width="1536" height="1536" alt="image" src="https://github.com/user-attachments/assets/ded5a880-656d-4c8c-8f76-147b0308f962" />
 
-#  FIGURE -08 ADD TITILE HERE 
+#  FIGURE -08 Console
+<img width="1536" height="1536" alt="image" src="https://github.com/user-attachments/assets/e4c63e8a-28b6-4fe6-8da3-56acca7f87a4" />
+<img width="1536" height="1536" alt="image" src="https://github.com/user-attachments/assets/9d9b36a2-ae1e-4754-887a-aa824005bd84" />
 
-# FIGURE -09 ADD TITLE HERE 
 
- 
+# FIGURE -09 CLOUD
+
+ <img width="1898" height="842" alt="image" src="https://github.com/user-attachments/assets/761e8dc9-8286-4b7c-b7e2-811ef3be5980" />
+ <img width="1918" height="902" alt="image" src="https://github.com/user-attachments/assets/f2902cdd-e9d6-4fd8-af4f-04b9613846a0" />
+
+
 ## RESULTS
 The Ultrasonic sensor and PIR sensor is connected to the Raspberry Pi 4 successfully and the distance and the motion detection is visualised in thingspeak confirming the proper interfacing of a digital output.
